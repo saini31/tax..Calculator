@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Tax Calculator</title>
+    <link
+      rel="stylesheet"
+      href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+    />
+    <style>
+      .error-icon {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container mt-5">
+      <form id="taxForm">
+        <div class="form-group">
+          <label for="grossIncome">Gross Annual Income:</label>
+          <input type="number" class="form-control" id="grossIncome" required />
+          <span class="error-icon" id="grossIncomeError" title="Invalid income"
+            >!</span
+          >
+        </div>
+        <div class="form-group">
+          <label for="extraIncome">Extra Income:</label>
+          <input type="number" class="form-control" id="extraIncome" required />
+          <span class="error-icon" id="extraIncomeError" title="Invalid income"
+            >!</span
+          >
+        </div>
+        <div class="form-group">
+          <label for="ageGroup">Age Group:</label>
+          <select class="form-control" id="ageGroup" required>
+            <option value="">Select</option>
+            <option value="<40">&lt;40</option>
+            <option value=">=40 & <60">&ge;40 &lt;60</option>
+            <option value=">=60">&ge;60</option>
+          </select>
+          <span
+            class="error-icon"
+            id="ageGroupError"
+            title="Age group is mandatory"
+            >!</span
+          >
+        </div>
+        <div class="form-group">
+          <label for="deductions">Total Applicable Deductions:</label>
+          <input type="number" class="form-control" id="deductions" required />
+          <span
+            class="error-icon"
+            id="deductionsError"
+            title="Invalid deductions"
+            >!</span
+          >
+        </div>
+        <button type="submit" class="btn btn-primary">Submit</button>
+      </form>
+    </div>
+
+    <!-- Modal -->
+    <div
+      class="modal fade"
+      id="resultModal"
+      tabindex="-1"
+      role="dialog"
+      aria-labelledby="resultModalLabel"
+      aria-hidden="true"
+    >
+      <div class="modal-dialog" role="document">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="resultModalLabel">
+              Tax Calculation Result
+            </h5>
+            <button
+              type="button"
+              class="close"
+              data-dismiss="modal"
+              aria-label="Close"
+            >
+              <span aria-hidden="true">&times;</span>
+            </button>
+          </div>
+          <div class="modal-body" id="modalBody">
+            <!-- Tax calculation result will be displayed here -->
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.16.0/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+      $(document).ready(function () {
+        // Function to display error icon and tooltip
+        function showError(fieldId, message) {
+          $("#" + fieldId + "Error")
+            .show()
+            .attr("title", message);
+          $("#" + fieldId).addClass("is-invalid");
+        }
+
+        // Function to calculate tax
+        function calculateTax(age, grossIncome, extraIncome, deductions) {
+          let totalIncome =
+            parseFloat(grossIncome) +
+            parseFloat(extraIncome) -
+            parseFloat(deductions);
+
+          if (totalIncome <= 800000) {
+            return "No tax"; // No tax if overall income after deductions is under 8 lakhs
+          } else {
+            let taxableAmount = Math.max(totalIncome - 800000, 0); // Ensure taxable amount is non-negative
+            let taxRate =
+              age === "<40" ? 0.3 : age === ">=40 & <60" ? 0.4 : 0.1;
+            let tax = taxRate * taxableAmount;
+            return tax >= 100000 ? tax / 100000 + " Lakhs" : tax + " Thousands";
+          }
+        }
+
+        // Form submission
+        $("#taxForm").submit(function (event) {
+          event.preventDefault();
+          $(".error-icon").hide();
+          $(".form-control").removeClass("is-invalid");
+
+          let age = $("#ageGroup").val();
+          let grossIncome = $("#grossIncome").val();
+          let extraIncome = $("#extraIncome").val();
+          let deductions = $("#deductions").val();
+
+          if (!age) {
+            showError("ageGroup", "Age group is mandatory");
+            return;
+          }
+
+          if (isNaN(grossIncome) || grossIncome < 0) {
+            showError("grossIncome", "Invalid income");
+            return;
+          }
+
+          if (isNaN(extraIncome) || extraIncome < 0) {
+            showError("extraIncome", "Invalid income");
+            return;
+          }
+
+          if (isNaN(deductions) || deductions < 0) {
+            showError("deductions", "Invalid deductions");
+            return;
+          }
+
+          let tax = calculateTax(age, grossIncome, extraIncome, deductions);
+          $("#modalBody").text("Tax: " + tax);
+          $("#resultModal").modal("show");
+        });
+      });
+    </script>
+  </body>
+</html>
